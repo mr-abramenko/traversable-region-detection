@@ -7,6 +7,14 @@
 #                             www.cvlibs.net                              #
 ###########################################################################
 
+
+Update November 2017:
+Porting to Python 3
+depend on the following libraries:
+1) numpy (tested with 1.13.3)
+2) opencv-python (tested with 3.3.0.10)
+
+
 Update February 2015:
 Now ground truth is stored as unsigned char color PNG
 - first/R plane contains valid evaluation area

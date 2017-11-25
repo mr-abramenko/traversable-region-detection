@@ -23,7 +23,7 @@ class BevParams(object):
     '''
 
     '''
-    # Param 
+    # Param
     bev_size = None
     bev_res = None
     bev_xLimits = None
@@ -100,12 +100,12 @@ class BevParams(object):
 
 def readKittiCalib(filename, dtype = 'f8'):
     '''
-    
+
     :param filename:
     :param dtype:
     '''
     outdict = dict()
-    output = open(filename, 'rb')
+    output = open(filename, 'r')
     allcontent = output.readlines()
     output.close()
     for contentRaw in allcontent:
@@ -144,10 +144,10 @@ class KittiCalibration(object):
         '''
 
 
-        if filekey != None:
+        if filekey is not None:
             fn = os.path.join(self.calib_dir, filekey + self.calib_end)
 
-        assert fn != None, 'Problem! fn or filekey must be != None'
+        assert fn is not None, 'Problem! fn or filekey must be != None'
         cur_calibStuff_dict = readKittiCalib(fn)
         self.setup(cur_calibStuff_dict)
 
@@ -186,7 +186,7 @@ class KittiCalibration(object):
         '''
 
         '''
-        assert self.Tr33 != None
+        assert self.Tr33 is not None
         return self.Tr33
 
 class BirdsEyeView(object):
@@ -202,20 +202,20 @@ class BirdsEyeView(object):
     bev_z_ind = None
     def __init__(self, bev_res= 0.05, bev_xRange_minMax = (-10, 10), bev_zRange_minMax = (6, 46)):
         '''
-        
+
         :param bev_res:
         :param bev_xRange_minMax:
         :param bev_zRange_minMax:
         '''
 
-        
+
         self.calib = KittiCalibration()
         bev_res = bev_res
         bev_xRange_minMax = bev_xRange_minMax
         bev_zRange_minMax = bev_zRange_minMax
         self.bevParams = BevParams(bev_res, bev_xRange_minMax, bev_zRange_minMax, self.imSize)
 
-    
+
     def world2image(self, X_world, Y_world, Z_world):
         '''
 
@@ -233,7 +233,7 @@ class BirdsEyeView(object):
         self.xi1 = test[0,:]#vec2[0,:]
         self.yi1 = test[1,:]#vec2[1,:]
 
-        assert  self.imSize != None
+        assert self.imSize is not None
         condition = ~((self.yi1 >= 1) & (self.xi1 >= 1) & (self.yi1 <= self.imSize[0]) & (self.xi1 <= self.imSize[1]))
         if isinstance(condition, np.ndarray):
             # Array
@@ -258,17 +258,17 @@ class BirdsEyeView(object):
         resultB = np.broadcast_arrays(result, result[-1,:])
         return resultB[0] / resultB[1]
 
-    
-    
+
+
     def setup(self, calib_file):
         '''
-        
+
         :param calib_file:
         '''
-  
+
         self.calib.readFromFile(fn= calib_file)
         self.set_matrix33(self.calib.get_matrix33())
-    
+
     def set_matrix33(self, matrix33):
         '''
 
@@ -284,7 +284,7 @@ class BirdsEyeView(object):
         self.imSize = data.shape
         self.computeBEVLookUpTable()
         return self.transformImage2BEV(data, out_dtype = data.dtype)
- 
+
     def compute_reverse(self, data, imSize):
         '''
         Compute BEV
@@ -293,8 +293,8 @@ class BirdsEyeView(object):
         self.imSize = imSize
         self.computeBEVLookUpTable_reverse()
         return self.transformBEV2Image(data, out_dtype = data.dtype)
- 
- 
+
+
     def computeBEVLookUpTable_reverse(self, imSize = None):
         '''
 
@@ -303,7 +303,7 @@ class BirdsEyeView(object):
         mgrid = np.lib.index_tricks.nd_grid()
 
         #[y_im,x_im]=ndgrid(1:camParam.imSize_org(1),1:camParam.imSize_org(2));
-        if imSize == None:
+        if imSize is None:
             # Take default imSize!
             imSize = self.imSize
         self.imSize_back = (imSize[0], imSize[1],)
@@ -311,7 +311,7 @@ class BirdsEyeView(object):
         # Equation of pinhole camera
         y_im = yx_im[0, :, :]
         x_im = yx_im[1, :, :]
-        
+
         dim =self.imSize_back[0]*self.imSize_back[1]
         uvMat = np.vstack((x_im.flatten(), y_im.flatten(), np.ones((dim,), 'f4')))
         xzMat = self.image2world_uvMat(uvMat)
@@ -328,7 +328,7 @@ class BirdsEyeView(object):
 
         self.xImInd_reverse = x_im[self.validMapIm_reverse] - 1
         self.yImInd_reverse = y_im[self.validMapIm_reverse] - 1
-    
+
     def image2world_uvMat(self, uv_mat):
         '''
 
@@ -401,42 +401,41 @@ class BirdsEyeView(object):
 
     def transformImage2BEV(self, inImage, out_dtype = 'f4'):
         '''
-        
+
         :param inImage:
         '''
-        assert self.im_u_float != None
-        assert self.im_v_float != None
-        assert self.bev_x_ind != None
-        assert self.bev_z_ind != None
-        
-        
+        assert self.im_u_float is not None
+        assert self.im_v_float is not None
+        assert self.bev_x_ind is not None
+        assert self.bev_z_ind is not None
+
+
         if len(inImage.shape) > 2:
             outputData = np.zeros(self.bevParams.bev_size + (inImage.shape[2],), dtype = out_dtype)
-            for channel in xrange(0, inImage.shape[2]):
+            for channel in range(0, inImage.shape[2]):
                 outputData[self.bev_z_ind-1, self.bev_x_ind-1, channel] = inImage[self.im_v_float.astype('u4')-1, self.im_u_float.astype('u4')-1, channel]
         else:
             outputData = np.zeros(self.bevParams.bev_size, dtype = out_dtype)
             outputData[self.bev_z_ind-1, self.bev_x_ind-1] = inImage[self.im_v_float.astype('u4')-1, self.im_u_float.astype('u4')-1]
-        
+
         return  outputData
-    
+
     def transformBEV2Image(self, bevMask, out_dtype = 'f4'):
         '''
 
         @param bevMask:
         '''
-        assert self.xImInd_reverse != None
-        assert self.yImInd_reverse != None
-        assert self.XBevInd_reverse != None
-        assert self.ZBevInd_reverse != None
-        assert self.imSize_back != None
+        assert self.xImInd_reverse is not None
+        assert self.yImInd_reverse is not None
+        assert self.XBevInd_reverse is not None
+        assert self.ZBevInd_reverse is not None
+        assert self.imSize_back is not None
         if len(bevMask.shape) > 2:
             outputData = np.zeros(self.imSize_back + (bevMask.shape[2],), dtype = out_dtype)
-            for channel in xrange(0, bevMask.shape[2]):
+            for channel in range(0, bevMask.shape[2]):
                 outputData[self.yImInd_reverse, self.xImInd_reverse, channel] = bevMask[self.ZBevInd_reverse, self.XBevInd_reverse, channel]
         else:
             outputData = np.zeros(self.imSize_back, dtype = out_dtype)
             outputData[self.yImInd_reverse, self.xImInd_reverse] = bevMask[self.ZBevInd_reverse, self.XBevInd_reverse]
         # Return result
-        return outputData        
-        
+        return outputData

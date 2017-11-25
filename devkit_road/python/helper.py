@@ -27,7 +27,7 @@ def getGroundTruth(fileNameGT):
     '''
     # Read GT
     assert os.path.isfile(fileNameGT), 'Cannot find: %s' % fileNameGT
-    full_gt = cv2.imread(fileNameGT, cv2.CV_LOAD_IMAGE_UNCHANGED)
+    full_gt = cv2.imread(fileNameGT, cv2.CV_LOAD_IMAGE_UNCHANGED if hasattr(cv2, 'CV_LOAD_IMAGE_UNCHANGED') else cv2.IMREAD_UNCHANGED)
     #attention: OpenCV reads in as BGR, so first channel has Blue / road GT
     roadArea =  full_gt[:,:,0] > 0
     validArea = full_gt[:,:,2] > 0
@@ -67,14 +67,14 @@ def evalExp(gtBin, cur_prob, thres, validMap = None, validArea=None):
     thresInf = np.concatenate(([-np.Inf], thres, [np.Inf]))
     
     #Merge validMap with validArea
-    if validMap!=None:
-        if validArea!=None:
+    if validMap is not None:
+        if validArea is not None:
             validMap = (validMap == True) & (validArea == True)
-    elif validArea!=None:
+    elif validArea is not None:
         validMap=validArea
 
     # histogram of false negatives
-    if validMap!=None:
+    if validMap is not None:
         fnArray = cur_prob[(gtBin == True) & (validMap == True)]
     else:
         fnArray = cur_prob[(gtBin == True)]
@@ -82,7 +82,7 @@ def evalExp(gtBin, cur_prob, thres, validMap = None, validArea=None):
     fnCum = np.cumsum(fnHist)
     FN = fnCum[0:0+len(thres)];
     
-    if validMap!=None:
+    if validMap is not None:
         fpArray = cur_prob[(gtBin == False) & (validMap == True)]
     else:
         fpArray = cur_prob[(gtBin == False)]
@@ -94,7 +94,7 @@ def evalExp(gtBin, cur_prob, thres, validMap = None, validArea=None):
     # count labels and protos
     #posNum = fnArray.shape[0]
     #negNum = fpArray.shape[0]
-    if validMap!=None:
+    if validMap is not None:
         posNum = np.sum((gtBin == True) & (validMap == True))
         negNum = np.sum((gtBin == False) & (validMap == True))
     else:
@@ -134,7 +134,7 @@ def pxEval_maximizeFMeasure(totalPosNum, totalNegNum, totalFN, totalFP, thresh =
     counter = 0
     for i in np.arange(0,1.1,0.1):
         ind = np.where(recall>=i)
-        if ind == None:
+        if ind is None:
             continue
         pmax = max(precision[ind])
         AvgPrec += pmax
@@ -177,7 +177,7 @@ def pxEval_maximizeFMeasure(totalPosNum, totalNegNum, totalFN, totalFP, thresh =
     #prob_eval_scores['precision_bst'] = precision_bst
     #prob_eval_scores['recall_bst'] = recall_bst
     prob_eval_scores['thresh'] = thresh
-    if thresh != None:
+    if thresh is not None:
         BestThresh= thresh[index]
         prob_eval_scores['BestThresh'] = BestThresh
 
@@ -289,7 +289,7 @@ def plotPrecisionRecall(precision, recall, outFileName, Fig=None, drawCol=1, tex
                       
     clearFig = False  
            
-    if Fig == None:
+    if Fig is None:
         Fig = pylab.figure()
         clearFig = True
         
@@ -305,10 +305,10 @@ def plotPrecisionRecall(precision, recall, outFileName, Fig=None, drawCol=1, tex
 
     #writing out PrecRecall curves as graphic
     setFigLinesBW(Fig)
-    if textLabel!= None:
+    if textLabel is not None:
         pylab.legend(loc='lower left',prop={'size':fontsize2})
     
-    if title!= None:
+    if title is not None:
         pylab.title(title, fontsize=fontsize1)
         
     #pylab.title(title,fontsize=24)
@@ -350,16 +350,16 @@ def saveBEVImageWithAxes(data, outputname, cmap = None, xlabel = 'x [m]', ylabel
     ax = pylab.gca()
     #ax.set_axis_off()
     #fig.add_axes(ax)
-    if cmap != None:
+    if cmap is not None:
         pylab.set_cmap(cmap)
     
     #ax.imshow(data, interpolation='nearest', aspect = 'normal')
     ax.imshow(data, interpolation='nearest')
     
-    if rangeXpx == None:
+    if rangeXpx is None:
         rangeXpx = (0, data.shape[1])
     
-    if rangeZpx == None:
+    if rangeZpx is None:
         rangeZpx = (0, data.shape[0])
         
     modBev_plot(ax, rangeX, rangeXpx, numDeltaX, rangeZ, rangeZpx, numDeltaZ, fontSize, xlabel = xlabel, ylabel = ylabel)
@@ -374,7 +374,7 @@ def modBev_plot(ax, rangeX = [-10, 10 ], rangeXpx= [0, 400], numDeltaX = 5, rang
     @param ax:
     '''
     #TODO: Configureabiltiy would be nice!
-    if fontSize==None:
+    if fontSize is None:
         fontSize = 8
  
     ax.set_xlabel(xlabel, fontsize=fontSize)
@@ -386,10 +386,10 @@ def modBev_plot(ax, rangeX = [-10, 10 ], rangeXpx= [0, 400], numDeltaX = 5, rang
     xTicksLabels_val = np.linspace(rangeXpx[0], rangeXpx[1], numDeltaX)
     ax.set_xticks(xTicksLabels_val)
     xTicksLabels_val = np.linspace(rangeX[0], rangeX[1], numDeltaX)
-    zTicksLabels = map(lambda x: str(int(x)), xTicksLabels_val)
+    zTicksLabels = [str(int(x)) for x in xTicksLabels_val]
     ax.set_xticklabels(zTicksLabels,fontsize=fontSize)
     zTicksLabels_val = np.linspace(rangeZ[1],rangeZ[0], numDeltaZ)
-    zTicksLabels = map(lambda x: str(int(x)), zTicksLabels_val)
+    zTicksLabels = [str(int(x)) for x in zTicksLabels_val]
     ax.set_yticklabels(zTicksLabels,fontsize=fontSize)
     
  
